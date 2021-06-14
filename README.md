@@ -5,15 +5,11 @@ library(patchwork)
 
 # Load the sample_ps47.1 dataset
 sample3.data <- Read10X(data.dir = "../data/sample_ps47.1/sample352/outs/filtered_feature_bc_matrix/")
-# Initialize the Seurat object with the raw (non-normalized data).
 sample3 <- CreateSeuratObject(counts = sample3.data, project = "pbmc3k", min.cells = 3, min.features = 200)
 sample3
 # The [[ operator can add columns to object metadata. This is a great place to stash QC stats
 sample3[["percent.mt"]] <- PercentageFeatureSet(sample3, pattern = "^mt-")
-# Visualize QC metrics as a violin plot
 VlnPlot(sample3, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-# FeatureScatter is typically used to visualize feature-feature relationships, but can be used
-# for anything calculated by the object, i.e. columns in object metadata, PC scores etc.
 
 plot1 <- FeatureScatter(sample3, feature1 = "nCount_RNA", feature2 = "percent.mt")
 plot2 <- FeatureScatter(sample3, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
@@ -49,7 +45,6 @@ ElbowPlot(sample3)
 #Cluster cells
 sample3 <- FindNeighbors(sample3, dims = 1:10)
 sample3 <- FindClusters(sample3, resolution = 0.5)
-# Look at cluster IDs of the first 5 cells
 head(Idents(sample3), 5)
 # If you haven't installed UMAP, you can do so via reticulate::py_install(packages =
 # 'umap-learn')
@@ -58,11 +53,6 @@ sample3 <- RunUMAP(sample3, dims = 1:10)
 # individual clusters
 DimPlot(sample3, reduction = "umap")
 saveRDS(sample3, file = "../data/sample_ps47.1/sample3.rds")
-
-# Find differentially expressed features(cluster biomarkers)
-# find all markers of cluster 2
-cluster2.markers <- FindMarkers(sample3, ident.1 = 2, min.pct = 0.25)
-head(cluster2.markers, n = 5)
 
 # find all markers distinguishing cluster 5 from clusters 0 and 3
 cluster5.markers <- FindMarkers(sample3, ident.1 = 5, ident.2 = c(0, 3), min.pct = 0.25)
@@ -83,4 +73,6 @@ names(new.cluster.ids) <- levels(sample3)
 sample3 <- RenameIdents(sample3, new.cluster.ids)
 DimPlot(sample3, reduction = "umap", label = TRUE, pt.size = 0.5) + NoLegend()
 saveRDS(sample3, file = "../data/sample_ps47.1/sample3_final.rds")
+
+
 
